@@ -283,7 +283,7 @@ function GameCard({game,expanded,onToggle,onUpdateComment,onAddBet,onUpdateBet,o
   const handleComment = useCallback((gameId, friendId, text) => {
     // Debounced save
     if (savingComment[friendId]) clearTimeout(savingComment[friendId]);
-    const timeout = setTimeout(() => { onUpdateComment(gameId, friendId, text); }, 500);
+    const timeout = setTimeout(() => { onUpdateComment(gameId, friendId, text); }, 1500);
     setSavingComment(prev => ({...prev, [friendId]: timeout}));
   }, [onUpdateComment, savingComment]);
 
