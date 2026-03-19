@@ -118,7 +118,7 @@ const ESPN_IDS = {
   "McNeese Cowboys":2377,"Northern Iowa Panthers":2460,"Akron Zips":2006,
   "High Point Panthers":2272,"Liberty Flames":2335,"UCSD Tritons":28,
   "Colorado State Rams":36,"Hofstra Pride":2275,"Troy Trojans":2653,
-  "Hawaii Rainbow Warriors":62,"California Baptist Lancers":2856,
+  "Hawaii Rainbow Warriors":62,"Hawai'i Rainbow Warriors":62,"California Baptist Lancers":2856,
   "Grand Canyon Antelopes":2253,"Lipscomb Bisons":288,"Yale Bulldogs":43,
   "North Dakota State Bison":2449,"Kennesaw State Owls":2320,"Wright State Raiders":2750,
   "Penn Quakers":219,"Furman Paladins":231,"Tennessee State Tigers":2590,

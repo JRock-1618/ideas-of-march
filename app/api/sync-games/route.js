@@ -40,7 +40,7 @@ const TOURNAMENT_TEAMS = [
   "McNeese Cowboys", "Northern Iowa Panthers", "Akron Zips", "High Point Panthers",
   "Liberty Flames", "UCSD Tritons", "Colorado State Rams",
   // 13 seeds
-  "Hofstra Pride", "Troy Trojans", "Hawaii Rainbow Warriors", "California Baptist Lancers",
+  "Hofstra Pride", "Troy Trojans", "Hawaii Rainbow Warriors", "Hawai'i Rainbow Warriors", "California Baptist Lancers",
   "Grand Canyon Antelopes", "Lipscomb Bisons", "Yale Bulldogs",
   // 14 seeds
   "North Dakota State Bison", "Kennesaw State Owls", "Wright State Raiders", "Penn Quakers",
@@ -54,18 +54,23 @@ const TOURNAMENT_TEAMS = [
   "Montana Grizzlies",
 ];
 
-// Create a Set for fast lookup, and also partial name matching
-const TOURNEY_SET = new Set(TOURNAMENT_TEAMS.map(t => t.toLowerCase()));
+// Create a Set for fast lookup with normalized names
+function normalize(s) { return s.toLowerCase().replace(/[''ʻ]/g, '').replace(/[^a-z0-9 ]/g, '').trim(); }
+const TOURNEY_SET = new Set(TOURNAMENT_TEAMS.map(normalize));
 
 function isTournamentTeam(teamName) {
   if (!teamName) return false;
-  const lower = teamName.toLowerCase();
+  const norm = normalize(teamName);
   // Exact match
-  if (TOURNEY_SET.has(lower)) return true;
-  // Partial: check if any tournament team name contains or is contained by this name
+  if (TOURNEY_SET.has(norm)) return true;
+  // Partial: match on first word + last word
   for (const t of TOURNEY_SET) {
-    if (lower.includes(t.split(' ')[0]) && lower.includes(t.split(' ').slice(-1)[0])) return true;
-    if (t.includes(lower.split(' ')[0]) && t.includes(lower.split(' ').slice(-1)[0])) return true;
+    const tFirst = t.split(' ')[0];
+    const tLast = t.split(' ').slice(-1)[0];
+    const nFirst = norm.split(' ')[0];
+    const nLast = norm.split(' ').slice(-1)[0];
+    if (norm.includes(tFirst) && norm.includes(tLast)) return true;
+    if (t.includes(nFirst) && t.includes(nLast)) return true;
   }
   return false;
 }
