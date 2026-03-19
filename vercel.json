@@ -1,6 +1,0 @@
-{
-  "crons": [
-    { "path": "/api/sync-games", "schedule": "*/15 * * * *" },
-    { "path": "/api/sync-scores", "schedule": "*/5 * * * *" }
-  ]
-}
