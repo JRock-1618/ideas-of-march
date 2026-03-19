@@ -94,32 +94,76 @@ function getAllGamesUpTo(roundData, upToRoundId) {
   return games;
 }
 
-// --- TEAM EMOJI PLACEHOLDERS ---
-const TEAM_EMOJI = {
-  "Louisville":"🐦","Creighton":"🐦‍⬛","Purdue":"🚂","High Point":"🐆","Auburn":"🐯","Alabama St":"🐝",
-  "BYU":"🏔️","VCU":"🐏","Gonzaga":"🐶","Georgia":"🐶","Kansas":"🐦","Arkansas":"🐗",
-  "Michigan":"🦡","UCSD":"🔱","Iowa St":"🌪️","Lipscomb":"🦬","Arizona":"🐱","Akron":"🦘",
-  "Baylor":"🐻","Miss St":"🐶","Tennessee":"🍊","UCLA":"🐻","McNeese":"🤠","St. Johns":"🌀",
-  "Duke":"😈","Alabama":"🐘","Maryland":"🐢","Florida":"🐊",
-  "Wisconsin":"🦡","Montana":"🐻","Texas Tech":"🔴","Drake":"🐶",
-  "Kentucky":"🐱","Troy":"⚔️","Marquette":"🦅","New Mexico":"🐺","UConn":"🐺",
-  "Oklahoma":"🐎","MSU":"⚔️","Bryant":"🐶","Oregon":"🦆","Liberty":"🔥",
-  "Ole Miss":"🐻","UNC":"🐏","Clemson":"🐯","Iowa":"🦅",
-  // The Odds API uses full names — add mappings
-  "Louisville Cardinals":"🐦","Purdue Boilermakers":"🚂","Auburn Tigers":"🐯",
-  "Duke Blue Devils":"😈","Alabama Crimson Tide":"🐘","Florida Gators":"🐊",
-  "Kansas Jayhawks":"🐦","Michigan Wolverines":"🦡","Tennessee Volunteers":"🍊",
-  "Gonzaga Bulldogs":"🐶","Arizona Wildcats":"🐱","Baylor Bears":"🐻",
-  "Iowa State Cyclones":"🌪️","UConn Huskies":"🐺","Michigan State Spartans":"⚔️",
-  "Houston Cougars":"🐆","Kentucky Wildcats":"🐱","UCLA Bruins":"🐻",
-  "Texas Tech Red Raiders":"🔴","Oregon Ducks":"🦆","Marquette Golden Eagles":"🦅",
-  "Clemson Tigers":"🐯","Wisconsin Badgers":"🦡","BYU Cougars":"🏔️",
-  "St. John's Red Storm":"🌀","Maryland Terrapins":"🐢","Ole Miss Rebels":"🐻",
-  "North Carolina Tar Heels":"🐏","Arkansas Razorbacks":"🐗","Creighton Bluejays":"🐦‍⬛",
+// --- TEAM LOGOS via ESPN CDN ---
+const ESPN_IDS = {
+  // Full API names
+  "Duke Blue Devils":150,"Michigan Wolverines":130,"Arizona Wildcats":12,"Florida Gators":57,
+  "Houston Cougars":248,"Purdue Boilermakers":2509,"Iowa State Cyclones":66,"Connecticut Huskies":41,
+  "St. John's Red Storm":2599,"Tennessee Volunteers":2633,"Alabama Crimson Tide":333,
+  "Michigan State Spartans":127,"Illinois Fighting Illini":356,"Wisconsin Badgers":275,
+  "Gonzaga Bulldogs":2250,"Virginia Cavaliers":258,"Kentucky Wildcats":96,
+  "Texas Tech Red Raiders":2641,"Arkansas Razorbacks":8,"Nebraska Cornhuskers":158,
+  "Kansas Jayhawks":2305,"Maryland Terrapins":120,"Vanderbilt Commodores":238,
+  "Clemson Tigers":228,"Oregon Ducks":2483,"Memphis Tigers":235,
+  "BYU Cougars":252,"Louisville Cardinals":97,"North Carolina Tar Heels":153,
+  "Ole Miss Rebels":145,"Missouri Tigers":142,"UCLA Bruins":26,
+  "Saint Mary's Gaels":2608,"Miami Hurricanes":2390,"Marquette Golden Eagles":269,
+  "Ohio State Buckeyes":194,"Georgia Bulldogs":61,"Villanova Wildcats":2918,
+  "TCU Horned Frogs":2628,"Utah State Aggies":328,"Iowa Hawkeyes":2294,
+  "Saint Louis Billikens":139,"Baylor Bears":239,"Creighton Bluejays":156,
+  "Oklahoma Sooners":201,"Texas A&M Aggies":245,"Santa Clara Broncos":2541,
+  "UCF Knights":2116,"New Mexico Lobos":167,"VCU Rams":2670,
+  "South Florida Bulls":58,"Texas Longhorns":251,"NC State Wolfpack":152,
+  "SMU Mustangs":2567,"Drake Bulldogs":2181,"Miami (OH) RedHawks":193,
+  "McNeese Cowboys":2377,"Northern Iowa Panthers":2460,"Akron Zips":2006,
+  "High Point Panthers":2272,"Liberty Flames":2335,"UCSD Tritons":28,
+  "Colorado State Rams":36,"Hofstra Pride":2275,"Troy Trojans":2653,
+  "Hawaii Rainbow Warriors":62,"California Baptist Lancers":2856,
+  "Grand Canyon Antelopes":2253,"Lipscomb Bisons":288,"Yale Bulldogs":43,
+  "North Dakota State Bison":2449,"Kennesaw State Owls":2320,"Wright State Raiders":2750,
+  "Penn Quakers":219,"Furman Paladins":231,"Tennessee State Tigers":2590,
+  "Queens Royals":null,"Idaho Vandals":70,"Wofford Terriers":2747,
+  "Bryant Bulldogs":2803,"Robert Morris Colonials":2523,"Omaha Mavericks":2437,
+  "Long Island Sharks":2344,"Siena Saints":2561,"Lehigh Mountain Hawks":2329,
+  "Howard Bison":47,"Prairie View A&M Panthers":2504,"UMBC Retrievers":2692,
+  "Norfolk State Spartans":2450,"Alabama State Hornets":2011,
+  "Mount St. Mary's Mountaineers":116,"Montana Grizzlies":149,
+  // Short names (from shortName function)
+  "Duke":150,"Michigan":130,"Arizona":12,"Florida":57,"Houston":248,"Purdue":2509,
+  "Iowa State":66,"UConn":41,"St. John's":2599,"Tennessee":2633,"Alabama":333,
+  "Michigan St":127,"Illinois":356,"Wisconsin":275,"Gonzaga":2250,"Virginia":258,
+  "Kentucky":96,"Texas Tech":2641,"Arkansas":8,"Nebraska":158,"Kansas":2305,
+  "Maryland":120,"Vanderbilt":238,"Clemson":228,"Oregon":2483,"Memphis":235,
+  "BYU":252,"Louisville":97,"UNC":153,"Ole Miss":145,"Mizzou":142,"UCLA":26,
+  "Saint Mary's":2608,"Miami (FL)":2390,"Marquette":269,"Ohio State":194,
+  "Georgia":61,"Villanova":2918,"TCU":2628,"Utah State":328,"Iowa":2294,
+  "Saint Louis":139,"Baylor":239,"Creighton":156,"Oklahoma":201,
+  "Texas A&M":245,"Santa Clara":2541,"UCF":2116,"New Mexico":167,
+  "VCU":2670,"South Florida":58,"Texas":251,"NC State":152,"SMU":2567,
+  "Drake":2181,"Miami (OH)":193,"McNeese":2377,"Northern Iowa":2460,
+  "Akron":2006,"High Point":2272,"Liberty":2335,"Colorado St":36,
+  "Hofstra":2275,"Troy":2653,"Hawaii":62,"Cal Baptist":2856,
+  "Grand Canyon":2253,"Lipscomb":288,"Yale":43,"NDSU":2449,
+  "Kennesaw St":2320,"Wright State":2750,"Penn":219,"Furman":231,
+  "Tennessee St":2590,"Idaho":70,"Wofford":2747,"Bryant":2803,
+  "Robert Morris":2523,"Omaha":2437,"LIU":2344,"Siena":2561,
+  "Lehigh":2329,"Howard":47,"Prairie View":2504,"UMBC":2692,
+  "Norfolk St":2450,"Alabama St":2011,"Mt St Mary's":116,"Montana":149,
 };
+
 function TeamIcon({name, fullName, size=20}) {
-  const emoji = TEAM_EMOJI[fullName] || TEAM_EMOJI[name] || TEAM_EMOJI[name?.split(' ')[0]] || "🏀";
-  return <span style={{fontSize:size*0.75,lineHeight:1,width:size,height:size,display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{emoji}</span>;
+  const id = ESPN_IDS[fullName] || ESPN_IDS[name];
+  if (id) {
+    return <img
+      src={`https://a.espncdn.com/i/teamlogos/ncaa/500/${id}.png`}
+      alt={name}
+      style={{width:size,height:size,objectFit:"contain",flexShrink:0,borderRadius:2}}
+      onError={e=>{e.target.style.display="none";}}
+    />;
+  }
+  // Fallback: first letter in a circle
+  const letter = (name || "?")[0];
+  return <div style={{width:size,height:size,borderRadius:size/2,background:"#E8E6E0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.45,fontWeight:700,color:"#9A9A9A",fontFamily:mono,flexShrink:0}}>{letter}</div>;
 }
 
 // --- UI COMPONENTS ---
