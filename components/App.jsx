@@ -61,17 +61,35 @@ function organizeByRound(games) {
   });
 
   // Within each round, group by date
+  const todayKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+
   Object.entries(byRound).forEach(([roundId, roundGames]) => {
     const byDate = {};
     roundGames.forEach(g => {
       const localDate = g.commence_time ? new Date(g.commence_time) : null;
-      const label = localDate ? localDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD';
       const dateKey = localDate ? `${localDate.getFullYear()}-${String(localDate.getMonth()+1).padStart(2,'0')}-${String(localDate.getDate()).padStart(2,'0')}` : 'tbd';
-      if (!byDate[dateKey]) byDate[dateKey] = { date: dateKey, label, games: [] };
+      const dayLabel = localDate ? localDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD';
+      const isToday = dateKey === todayKey;
+      const label = isToday ? `Today — ${dayLabel}` : dayLabel;
+      if (!byDate[dateKey]) byDate[dateKey] = { date: dateKey, label, isToday, games: [] };
       byDate[dateKey].games.push(g);
     });
+
+    // Sort: today first, then future dates ascending, then past dates descending
     if (roundData[roundId]) {
-      roundData[roundId].days = Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+      const days = Object.values(byDate);
+      days.sort((a, b) => {
+        const aIsToday = a.date === todayKey;
+        const bIsToday = b.date === todayKey;
+        const aIsPast = a.date < todayKey;
+        const bIsPast = b.date < todayKey;
+        if (aIsToday && !bIsToday) return -1;
+        if (!aIsToday && bIsToday) return 1;
+        if (!aIsPast && bIsPast) return -1;
+        if (aIsPast && !bIsPast) return 1;
+        return a.date.localeCompare(b.date);
+      });
+      roundData[roundId].days = days;
     }
   });
 
@@ -456,6 +474,7 @@ export default function App() {
   const rs = calcStats(rg);
   const curr = roundData[ar];
   const ri = ROUNDS.find(r => r.id === ar);
+  const todayLocal = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
 
   const tog = id => setExp(p => ({...p, [id]: !p[id]}));
 
@@ -594,9 +613,20 @@ export default function App() {
           </div>;
         })()}
 
-        {curr?.days?.length>0?curr.days.map(day=>(
+        {curr?.days?.length>0?curr.days.map((day,di)=>(
           <div key={day.date} style={{marginBottom:24}}>
-            <div style={{fontSize:11,fontWeight:600,color:C.textMuted,textTransform:"uppercase",letterSpacing:"0.06em",fontFamily:mono,marginBottom:8,paddingLeft:2}}>{day.label}</div>
+            {/* Show "Completed Games" divider before past days */}
+            {di > 0 && day.date < todayLocal && curr.days[di-1].date >= todayLocal && (
+              <div style={{display:"flex",alignItems:"center",gap:12,margin:"20px 0 12px"}}>
+                <div style={{flex:1,height:1,background:C.border}}/>
+                <span style={{fontSize:10,fontWeight:600,color:C.textMuted,textTransform:"uppercase",letterSpacing:"0.1em",fontFamily:mono}}>Completed</span>
+                <div style={{flex:1,height:1,background:C.border}}/>
+              </div>
+            )}
+            <div style={{fontSize:11,fontWeight:600,color:day.isToday?C.accent:C.textMuted,textTransform:"uppercase",letterSpacing:"0.06em",fontFamily:mono,marginBottom:8,paddingLeft:2}}>
+              {day.isToday && <span style={{display:"inline-block",width:6,height:6,borderRadius:3,background:C.accent,marginRight:8,verticalAlign:"middle"}}/>}
+              {day.label}
+            </div>
             {day.games.map(g=><GameCard key={g.id} game={g} expanded={!!exp[g.id]} onToggle={()=>tog(g.id)} onUpdateComment={handleComment} onAddBet={handleAddBet} onUpdateBet={handleUpdateBet} onToggleParlayLeg={togPL}/>)}
           </div>
         )):(
