@@ -48,7 +48,7 @@ const TOURNAMENT_TEAMS = [
   "Furman Paladins", "Tennessee State Tigers", "Queens Royals", "Idaho Vandals",
   "Wofford Terriers", "Bryant Bulldogs", "Robert Morris Colonials", "Omaha Mavericks",
   // 16 seeds
-  "Long Island Sharks", "Long Island University Sharks", "LIU Sharks" "Siena Saints", "Lehigh Mountain Hawks", "Howard Bison",
+  "Long Island Sharks", "Long Island University Sharks", "LIU Sharks", "Siena Saints", "Lehigh Mountain Hawks", "Howard Bison",
   "Prairie View A&M Panthers", "UMBC Retrievers",
   "Norfolk State Spartans", "Alabama State Hornets", "Mount St. Mary's Mountaineers",
   "Montana Grizzlies",
