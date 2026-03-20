@@ -2,76 +2,94 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { fetchGames, transformGame } from '@/lib/odds-api';
 
-// 2026 NCAA Tournament field (68 teams) — full names as used by The Odds API
+// 2026 NCAA Tournament field — all known name variants
 const TOURNAMENT_TEAMS = [
-  // 1 seeds
   "Duke Blue Devils", "Michigan Wolverines", "Arizona Wildcats", "Florida Gators",
-  // 2 seeds
   "Houston Cougars", "Purdue Boilermakers", "Iowa State Cyclones", "Connecticut Huskies",
-  "St. John's Red Storm", "Tennessee Volunteers", "Alabama Crimson Tide", "Michigan State Spartans",
-  // 3 seeds
-  "Illinois Fighting Illini", "Wisconsin Badgers", "Gonzaga Bulldogs", "Virginia Cavaliers",
-  "Kentucky Wildcats", "Texas Tech Red Raiders",
-  // 4 seeds
-  "Arkansas Razorbacks", "Nebraska Cornhuskers", "Kansas Jayhawks", "Maryland Terrapins",
-  "Arizona State Sun Devils",
-  // 5 seeds
-  "St. John's Red Storm", "Vanderbilt Commodores", "Clemson Tigers", "Michigan Wolverines",
-  "Oregon Ducks", "Memphis Tigers",
-  // 6 seeds
-  "BYU Cougars", "Louisville Cardinals", "Tennessee Volunteers", "North Carolina Tar Heels",
-  "Ole Miss Rebels", "Missouri Tigers",
-  // 7 seeds
-  "UCLA Bruins", "Saint Mary's Gaels", "Miami Hurricanes", "Kansas Jayhawks",
-  "Marquette Golden Eagles",
-  // 8 seeds
-  "Ohio State Buckeyes", "Gonzaga Bulldogs", "Georgia Bulldogs", "Clemson Tigers",
-  "Villanova Wildcats", "UConn Huskies", "Louisville Cardinals",
-  // 9 seeds
-  "TCU Horned Frogs", "Utah State Aggies", "Iowa Hawkeyes", "Saint Louis Billikens",
-  "Baylor Bears", "Creighton Bluejays", "Oklahoma Sooners",
-  // 10 seeds
-  "Texas A&M Aggies", "Santa Clara Broncos", "UCF Knights", "Missouri Tigers",
-  "New Mexico Lobos", "Arkansas Razorbacks",
-  // 11 seeds
-  "VCU Rams", "South Florida Bulls", "Texas Longhorns", "NC State Wolfpack", "SMU Mustangs",
-  "Drake Bulldogs", "Miami (OH) RedHawks",
-  // 12 seeds
-  "McNeese Cowboys", "Northern Iowa Panthers", "Akron Zips", "High Point Panthers",
-  "Liberty Flames", "UCSD Tritons", "Colorado State Rams",
-  // 13 seeds
-  "Hofstra Pride", "Troy Trojans", "Hawaii Rainbow Warriors", "Hawai'i Rainbow Warriors", "California Baptist Lancers",
-  "Grand Canyon Antelopes", "Lipscomb Bisons", "Yale Bulldogs",
-  // 14 seeds
-  "North Dakota State Bison", "Kennesaw State Owls", "Wright State Raiders", "Penn Quakers",
-  // 15 seeds
-  "Furman Paladins", "Tennessee State Tigers", "Queens Royals", "Idaho Vandals",
-  "Wofford Terriers", "Bryant Bulldogs", "Robert Morris Colonials", "Omaha Mavericks",
-  // 16 seeds
-  "Long Island Sharks", "Long Island University Sharks", "LIU Sharks", "Siena Saints", "Lehigh Mountain Hawks", "Howard Bison",
-  "Prairie View A&M Panthers", "UMBC Retrievers",
-  "Norfolk State Spartans", "Alabama State Hornets", "Mount St. Mary's Mountaineers",
+  "UConn Huskies",
+  "St. John's Red Storm", "Tennessee Volunteers", "Alabama Crimson Tide",
+  "Michigan State Spartans", "Michigan St Spartans",
+  "Illinois Fighting Illini", "Wisconsin Badgers", "Gonzaga Bulldogs",
+  "Virginia Cavaliers", "Kentucky Wildcats", "Texas Tech Red Raiders",
+  "Arkansas Razorbacks", "Nebraska Cornhuskers", "Kansas Jayhawks",
+  "Maryland Terrapins", "Arizona State Sun Devils",
+  "Vanderbilt Commodores", "Clemson Tigers", "Oregon Ducks", "Memphis Tigers",
+  "BYU Cougars", "Louisville Cardinals", "North Carolina Tar Heels",
+  "Ole Miss Rebels", "Missouri Tigers", "UCLA Bruins",
+  "Saint Mary's Gaels", "Miami Hurricanes", "Marquette Golden Eagles",
+  "Ohio State Buckeyes", "Georgia Bulldogs", "Villanova Wildcats",
+  "TCU Horned Frogs", "Utah State Aggies", "Iowa Hawkeyes",
+  "Saint Louis Billikens", "Baylor Bears", "Creighton Bluejays",
+  "Oklahoma Sooners",
+  "Texas A&M Aggies", "Santa Clara Broncos", "UCF Knights",
+  "New Mexico Lobos",
+  "VCU Rams", "South Florida Bulls", "Texas Longhorns",
+  "NC State Wolfpack", "SMU Mustangs", "Drake Bulldogs",
+  "Miami (OH) RedHawks", "Miami Ohio RedHawks",
+  "McNeese Cowboys", "McNeese State Cowboys",
+  "Northern Iowa Panthers",
+  "Akron Zips", "High Point Panthers",
+  "Liberty Flames", "UCSD Tritons", "UC San Diego Tritons",
+  "Colorado State Rams",
+  "Hofstra Pride", "Troy Trojans",
+  "Hawaii Rainbow Warriors", "Hawai'i Rainbow Warriors", "Hawai'i Rainbow Warriors",
+  "California Baptist Lancers", "Cal Baptist Lancers",
+  "Grand Canyon Antelopes", "Lipscomb Bisons",
+  "Yale Bulldogs",
+  "North Dakota State Bison",
+  "Kennesaw State Owls",
+  "Wright State Raiders", "Wright St Raiders",
+  "Penn Quakers",
+  "Furman Paladins",
+  "Tennessee State Tigers", "Tennessee St Tigers",
+  "Queens Royals", "Queens University Royals",
+  "Idaho Vandals",
+  "Wofford Terriers",
+  "Bryant Bulldogs",
+  "Robert Morris Colonials",
+  "Omaha Mavericks", "Nebraska-Omaha Mavericks",
+  "Long Island Sharks", "Long Island University Sharks", "LIU Sharks",
+  "Siena Saints",
+  "Lehigh Mountain Hawks",
+  "Howard Bison",
+  "Prairie View A&M Panthers", "Prairie View Panthers",
+  "UMBC Retrievers",
+  "Norfolk State Spartans",
+  "Alabama State Hornets",
+  "Mount St. Mary's Mountaineers",
   "Montana Grizzlies",
 ];
 
-// Create a Set for fast lookup with normalized names
-function normalize(s) { return s.toLowerCase().replace(/[''ʻ]/g, '').replace(/[^a-z0-9 ]/g, '').trim(); }
-const TOURNEY_SET = new Set(TOURNAMENT_TEAMS.map(normalize));
+// Normalize: strip special chars, lowercase
+function normalize(s) {
+  return s.toLowerCase()
+    .replace(/[''ʻ']/g, '')
+    .replace(/\./g, '')
+    .replace(/[^a-z0-9 &()-]/g, '')
+    .trim();
+}
+
+const TOURNEY_NORMALIZED = new Set(TOURNAMENT_TEAMS.map(normalize));
+
+// Also build a set of just first words for fuzzy matching
+const TOURNEY_FIRST_WORDS = new Set(TOURNAMENT_TEAMS.map(t => normalize(t).split(' ')[0]));
 
 function isTournamentTeam(teamName) {
   if (!teamName) return false;
   const norm = normalize(teamName);
-  // Exact match
-  if (TOURNEY_SET.has(norm)) return true;
-  // Partial: match on first word + last word
-  for (const t of TOURNEY_SET) {
-    const tFirst = t.split(' ')[0];
-    const tLast = t.split(' ').slice(-1)[0];
-    const nFirst = norm.split(' ')[0];
-    const nLast = norm.split(' ').slice(-1)[0];
-    if (norm.includes(tFirst) && norm.includes(tLast)) return true;
-    if (t.includes(nFirst) && t.includes(nLast)) return true;
+
+  // Exact normalized match
+  if (TOURNEY_NORMALIZED.has(norm)) return true;
+
+  // Check if first word + last word both appear in any tournament team
+  const words = norm.split(' ');
+  const first = words[0];
+  const last = words[words.length - 1];
+
+  for (const t of TOURNEY_NORMALIZED) {
+    if (t.includes(first) && t.includes(last)) return true;
   }
+
   return false;
 }
 
@@ -85,7 +103,7 @@ function detectRound(commenceTime) {
   const month = d.getMonth() + 1;
   const day = d.getDate();
 
-  if (month === 3 && day <= 19) return 'r64'; // First Four + R64 Day 1
+  if (month === 3 && day <= 19) return 'r64';
   if (month === 3 && day <= 21) return 'r64';
   if (month === 3 && day <= 23) return 'r32';
   if (month === 3 && day <= 28) return 's16';
@@ -98,7 +116,15 @@ export async function POST() {
   try {
     const rawGames = await fetchGames();
 
-    // Filter to tournament games only
+    // Log all teams for debugging
+    const allTeams = new Set();
+    rawGames.forEach(g => { allTeams.add(g.home_team); allTeams.add(g.away_team); });
+
+    // Find unmatched teams
+    const unmatched = [];
+    allTeams.forEach(t => { if (!isTournamentTeam(t)) unmatched.push(t); });
+
+    // Filter to tournament games
     const tourneyGames = rawGames.filter(isTournamentGame);
 
     const games = tourneyGames.map(raw => {
@@ -137,6 +163,7 @@ export async function POST() {
       synced,
       totalFromApi: rawGames.length,
       filteredToTourney: tourneyGames.length,
+      unmatchedTeams: unmatched,
     });
   } catch (err) {
     console.error('Sync error:', err);
