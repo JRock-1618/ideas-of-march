@@ -99,16 +99,23 @@ function isTournamentGame(game) {
 
 // Determine tournament round based on date
 function detectRound(commenceTime) {
+  // Shift UTC to approximate Central Time for "game day" detection
   const d = new Date(commenceTime);
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
+  const ct = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+  const month = ct.getUTCMonth() + 1;
+  const day = ct.getUTCDate();
 
-  if (month === 3 && day <= 19) return 'r64';
-  if (month === 3 && day <= 21) return 'r64';
-  if (month === 3 && day <= 23) return 'r32';
+  // First Four + R64: through Fri Mar 20
+  if (month === 3 && day <= 20) return 'r64';
+  // R32: Sat Mar 21 + Sun Mar 22
+  if (month === 3 && day <= 22) return 'r32';
+  // S16: Thu Mar 27 + Fri Mar 28
   if (month === 3 && day <= 28) return 's16';
+  // E8: Sat Mar 29 + Sun Mar 30
   if (month === 3 && day <= 30) return 'e8';
+  // F4: Sat Apr 5
   if (month === 4 && day <= 5) return 'f4';
+  // Championship: Mon Apr 7
   return 'champ';
 }
 
